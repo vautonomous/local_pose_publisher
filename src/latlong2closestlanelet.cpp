@@ -12,7 +12,7 @@ CartesianConv::CartesianConv()
   std::cout.precision(20);
 
   map_to_pose_ =
-      this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/gnss_pose_local", 10);
+      this->create_publisher<geometry_msgs::msg::PoseStamped>("/gnss_pose_local", 10);
 
   navsatfix = this->create_subscription<sensor_msgs::msg::NavSatFix>(
           "/applanix/lvx_client/gnss/fix",10,
@@ -27,8 +27,8 @@ void CartesianConv::navsatfix_cb(const sensor_msgs::msg::NavSatFix::SharedPtr ms
 
         int zone ;
         bool northp;
-        UTMUPS::Forward(initial_map_lat, initial_map_lon, zone, northp, utm_pose_map.pose.pose.position.x, utm_pose_map.pose.pose.position.y);
-        utm_pose_map.pose.pose.position.z = initial_map_alt;
+        UTMUPS::Forward(initial_map_lat, initial_map_lon, zone, northp, utm_pose_map.pose.position.x, utm_pose_map.pose.position.y);
+        utm_pose_map.pose.position.z = initial_map_alt;
 
         is_init = 1;
     }
@@ -37,18 +37,18 @@ void CartesianConv::navsatfix_cb(const sensor_msgs::msg::NavSatFix::SharedPtr ms
     double Longitude = msg->longitude;
     double Altitude  = msg->altitude;
 
-    geometry_msgs::msg::PoseWithCovarianceStamped utm_pose;
-    geometry_msgs::msg::PoseWithCovarianceStamped utm_pose_local;
+    geometry_msgs::msg::PoseStamped utm_pose;
+    geometry_msgs::msg::PoseStamped utm_pose_local;
     utm_pose_local.header.frame_id = "map";
     utm_pose_local.header.stamp = rclcpp::Clock().now();
 
     int zone ;
     bool northp;
-    UTMUPS::Forward(Latitude, Longitude, zone, northp, utm_pose.pose.pose.position.x, utm_pose.pose.pose.position.y);
+    UTMUPS::Forward(Latitude, Longitude, zone, northp, utm_pose.pose.position.x, utm_pose.pose.position.y);
 
-    utm_pose_local.pose.pose.position.x = utm_pose.pose.pose.position.x - utm_pose_map.pose.pose.position.x ;
-    utm_pose_local.pose.pose.position.y = utm_pose.pose.pose.position.y - utm_pose_map.pose.pose.position.y;
-    utm_pose_local.pose.pose.position.z = Altitude - utm_pose_map.pose.pose.position.z;
+    utm_pose_local.pose.position.x = utm_pose.pose.position.x - utm_pose_map.pose.position.x ;
+    utm_pose_local.pose.position.y = utm_pose.pose.position.y - utm_pose_map.pose.position.y;
+    utm_pose_local.pose.position.z = Altitude - utm_pose_map.pose.position.z;
 
 
     map_to_pose_->publish(utm_pose_local);

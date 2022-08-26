@@ -5,7 +5,7 @@
 
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <memory>
 
 class CartesianConv : public rclcpp::Node {
@@ -13,10 +13,10 @@ class CartesianConv : public rclcpp::Node {
   CartesianConv();
 
   bool is_init = 0;
-  geometry_msgs::msg::PoseWithCovarianceStamped utm_pose_map;
+  geometry_msgs::msg::PoseStamped utm_pose_map;
 
 
-  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr map_to_pose_;
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr map_to_pose_;
 
   rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr navsatfix;
 
@@ -24,7 +24,7 @@ class CartesianConv : public rclcpp::Node {
  private:
 
  void navsatfix_cb(const sensor_msgs::msg::NavSatFix::SharedPtr msg);
- geometry_msgs::msg::PoseWithCovarianceStamped gnss_baselink_pose;
+ geometry_msgs::msg::PoseStamped gnss_baselink_pose;
 
 };
 
