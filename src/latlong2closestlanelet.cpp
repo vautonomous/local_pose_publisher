@@ -14,36 +14,33 @@ CartesianConvNode::CartesianConvNode(const rclcpp::NodeOptions &node_options)
   using std::placeholders::_1;
 
   // Parameters
-  double origin_latitude =
+  const double origin_latitude =
       this->declare_parameter("origin_latitude", 40.81187906);
-  double origin_longitude =
+  const double origin_longitude =
       this->declare_parameter("origin_longitude", 29.35810110);
-  double origin_altitude = this->declare_parameter("origin_altitude", 48.35);
+  const double origin_altitude =
+      this->declare_parameter("origin_altitude", 48.35);
 
   // Initialize UTM map origin
   int zone;
   bool northp;
   UTMUPS::Forward(origin_latitude, origin_longitude, zone, northp,
-                  utm_pose_map_->pose.position.x,
-                  utm_pose_map_->pose.position.y);
-  utm_pose_map_->pose.position.z = origin_altitude;
+                  utm_pose_map_.pose.position.x,
+                  utm_pose_map_.pose.position.y);
+  utm_pose_map_.pose.position.z = origin_altitude;
 
   // Publishers
   pub_pose_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
-      "~/output/goal_pose_on_lanelet", rclcpp::QoS{1}.transient_local());
+      "~/output/goal_pose_on_lanelet", 1);
 
   // Subscriptions
   sub_nav_sat_fix_ = this->create_subscription<sensor_msgs::msg::NavSatFix>(
-      "~/input/goal_gnss_coordinate", rclcpp::QoS{1}.transient_local(),
+      "~/input/goal_gnss_coordinate", 10,
       std::bind(&CartesianConvNode::onNavSatFix, this, _1));
 }
 
 void CartesianConvNode::onNavSatFix(
     const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg) {
-
-  if (!utm_pose_map_) {
-    return;
-  }
 
   double latitude = msg->latitude;
   double longitude = msg->longitude;
@@ -52,7 +49,7 @@ void CartesianConvNode::onNavSatFix(
   geometry_msgs::msg::PoseStamped utm_pose;
   geometry_msgs::msg::PoseStamped utm_pose_local;
   utm_pose_local.header.frame_id = "map";
-  utm_pose_local.header.stamp = rclcpp::Clock().now();
+  utm_pose_local.header.stamp = this->now();
 
   int zone;
   bool northp;
@@ -60,10 +57,10 @@ void CartesianConvNode::onNavSatFix(
                   utm_pose.pose.position.y);
 
   utm_pose_local.pose.position.x =
-      utm_pose.pose.position.x - utm_pose_map_->pose.position.x;
+      utm_pose.pose.position.x - utm_pose_map_.pose.position.x;
   utm_pose_local.pose.position.y =
-      utm_pose.pose.position.y - utm_pose_map_->pose.position.y;
-  utm_pose_local.pose.position.z = altitude - utm_pose_map_->pose.position.z;
+      utm_pose.pose.position.y - utm_pose_map_.pose.position.y;
+  utm_pose_local.pose.position.z = altitude - utm_pose_map_.pose.position.z;
 
   pub_pose_->publish(utm_pose_local);
 }

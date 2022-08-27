@@ -14,7 +14,7 @@ class CartesianConvNode : public rclcpp::Node {
 public:
   explicit CartesianConvNode(const rclcpp::NodeOptions &node_options);
 
-  boost::optional<geometry_msgs::msg::PoseStamped> utm_pose_map_;
+  geometry_msgs::msg::PoseStamped utm_pose_map_;
 
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pub_pose_;
   rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr sub_nav_sat_fix_;
