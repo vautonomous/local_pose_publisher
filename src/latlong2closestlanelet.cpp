@@ -14,18 +14,19 @@ CartesianConvNode::CartesianConvNode(const rclcpp::NodeOptions &node_options)
   using std::placeholders::_1;
 
   // Parameters
-  double initial_map_lat = this->declare_parameter("latitude_map", 40.81187906);
-  double initial_map_lon =
-      this->declare_parameter("longitude_map", 29.35810110);
-  double initial_map_alt = this->declare_parameter("altitude_map", 48.35);
+  double origin_latitude =
+      this->declare_parameter("origin_latitude", 40.81187906);
+  double origin_longitude =
+      this->declare_parameter("origin_longitude", 29.35810110);
+  double origin_altitude = this->declare_parameter("origin_altitude", 48.35);
 
   // Initialize UTM map origin
   int zone;
   bool northp;
-  UTMUPS::Forward(initial_map_lat, initial_map_lon, zone, northp,
+  UTMUPS::Forward(origin_latitude, origin_longitude, zone, northp,
                   utm_pose_map_->pose.position.x,
                   utm_pose_map_->pose.position.y);
-  utm_pose_map_->pose.position.z = initial_map_alt;
+  utm_pose_map_->pose.position.z = origin_altitude;
 
   // Publishers
   pub_pose_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
