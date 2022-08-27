@@ -3,7 +3,6 @@ project(latlong2closestlanelet)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
-
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -40,9 +39,7 @@ ament_export_include_directories(include)
 
 add_executable(${PROJECT_NAME} src/latlong2closestlanelet.cpp)
 
-
 ament_target_dependencies(${PROJECT_NAME} rclcpp std_msgs geometry_msgs sensor_msgs GeographicLib)
-
 
 install(TARGETS
         ${PROJECT_NAME}
@@ -52,6 +49,7 @@ install(TARGETS
 set(CLIENT_LIBRARIES
         "GeographicLib"
         )
+
 set(AMENT_DEPENDENCIES
         "tf2"
         "tf2_ros"
@@ -59,7 +57,6 @@ set(AMENT_DEPENDENCIES
         "tf2_geometry_msgs"
         "sensor_msgs"
         )
-        
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -67,7 +64,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 install(TARGETS ${PROJECT_NAME}
   DESTINATION lib/${PROJECT_NAME})
-
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -1,21 +1,30 @@
-### Description 
-This package converts GNSS-INS data (lattitude,longitude,altitude) to cartesian coordinate system and publishes the pose (pose_with_covariance_stamped).
+### Description
+
+This package converts GNSS-INS data (latitude,longitude,altitude) to a point on cartesian local
+coordinate system and calculates & publishes the closest pose to the point in the center line of
+lanelet2 map.
 
 ### How it works
-The first incoming location information is set as the map frame. The next incoming location information is published according to the map frame. Using tf2, map frame and new pose frame are published. 
+
+The first given location information in config file is set as the map origin. Using this origin
+subscribed lat-lon-alt coordinates are transformed to local coordinate system 
 
 ### Usage
 
-* `ros2 run gnss_ins_cartesian_converter_nodes gnss_ins_cartesian_converter_nodes`
+`ros2 launch latlong2closestlanelet latlong2closestlanelet.launch.py`
 
-#### Subscribed Topics
-* /lvx_client/gsof/ins_solution_49 (applanix_msgs::msg::NavigationSolutionGsof49)
-* /lvx_client/gsof/ins_solution_rms_50 (applanix_msgs::msg::NavigationPerformanceGsof50)
+### Input Topics
 
-#### Published Topics
-* /pose_with_covariance_stamped (geometry_msgs::msg::PoseWithCovarianceStamped)
+| Name                           | Type                        | Description                           |
+| -------------------------------| ----------------------------| --------------------------------------|
+| `~/input/goal_gnss_coordinate` | sensor_msgs::msg::NavSatFix | goal point coordinates as lat-lon-alt |
+
+### Output Topics
+
+| Name                            | Type                             | Description                     |
+| --------------------------------| ---------------------------------| --------------------------------|
+| `~/output/goal_pose_on_lanelet` | geometry_msgs::msg::PoseStamped  | closest pose in the center line |
 
 ### External Dependencies
+
 * GeographicLib
-* applanix_msgs
-* Eigen3

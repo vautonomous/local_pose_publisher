@@ -5,6 +5,7 @@
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="melike@leodrive.ai">melike</maintainer>
+  <maintainer email="mdogru@leodrive.ai">Mehmet Dogru</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

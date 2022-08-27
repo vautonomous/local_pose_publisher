@@ -2,63 +2,76 @@
 
 #include "latlong2closestlanelet/latlong2closestlanelet.h"
 #include <GeographicLib/UTMUPS.hpp>
-#include <rclcpp/rclcpp.hpp>
 #include <iostream>
 #include <memory>
+#include <rclcpp/rclcpp.hpp>
 
 using namespace GeographicLib;
-CartesianConv::CartesianConv()
-    : Node("SensorSubscriber") {
-  std::cout.precision(20);
 
-  map_to_pose_ =
-      this->create_publisher<geometry_msgs::msg::PoseStamped>("/gnss_pose_local", 10);
+CartesianConvNode::CartesianConvNode(const rclcpp::NodeOptions &node_options)
+    : Node("lat_lon_to_lanelet_closest_pose", node_options) {
 
-  navsatfix = this->create_subscription<sensor_msgs::msg::NavSatFix>(
-          "/applanix/lvx_client/gnss/fix",10,
-          std::bind(&CartesianConv::navsatfix_cb, this, std::placeholders::_1));
-}
-void CartesianConv::navsatfix_cb(const sensor_msgs::msg::NavSatFix::SharedPtr msg) {
+  using std::placeholders::_1;
 
-    if(is_init == 0) {
-        double initial_map_lat = this->declare_parameter("latitude_map").template get<double>();
-        double initial_map_lon = this->declare_parameter("longitude_map").template get<double>();
-        double initial_map_alt = this->declare_parameter("altitude_map").template get<double>();
+  // Parameters
+  double initial_map_lat = this->declare_parameter("latitude_map", 40.81187906);
+  double initial_map_lon =
+      this->declare_parameter("longitude_map", 29.35810110);
+  double initial_map_alt = this->declare_parameter("altitude_map", 48.35);
 
-        int zone ;
-        bool northp;
-        UTMUPS::Forward(initial_map_lat, initial_map_lon, zone, northp, utm_pose_map.pose.position.x, utm_pose_map.pose.position.y);
-        utm_pose_map.pose.position.z = initial_map_alt;
+  // Initialize UTM map origin
+  int zone;
+  bool northp;
+  UTMUPS::Forward(initial_map_lat, initial_map_lon, zone, northp,
+                  utm_pose_map_->pose.position.x,
+                  utm_pose_map_->pose.position.y);
+  utm_pose_map_->pose.position.z = initial_map_alt;
 
-        is_init = 1;
-    }
+  // Publishers
+  pub_pose_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
+      "~/output/goal_pose_on_lanelet", rclcpp::QoS{1}.transient_local());
 
-    double Latitude  = msg->latitude;
-    double Longitude = msg->longitude;
-    double Altitude  = msg->altitude;
-
-    geometry_msgs::msg::PoseStamped utm_pose;
-    geometry_msgs::msg::PoseStamped utm_pose_local;
-    utm_pose_local.header.frame_id = "map";
-    utm_pose_local.header.stamp = rclcpp::Clock().now();
-
-    int zone ;
-    bool northp;
-    UTMUPS::Forward(Latitude, Longitude, zone, northp, utm_pose.pose.position.x, utm_pose.pose.position.y);
-
-    utm_pose_local.pose.position.x = utm_pose.pose.position.x - utm_pose_map.pose.position.x ;
-    utm_pose_local.pose.position.y = utm_pose.pose.position.y - utm_pose_map.pose.position.y;
-    utm_pose_local.pose.position.z = Altitude - utm_pose_map.pose.position.z;
-
-
-    map_to_pose_->publish(utm_pose_local);
+  // Subscriptions
+  sub_nav_sat_fix_ = this->create_subscription<sensor_msgs::msg::NavSatFix>(
+      "~/input/goal_gnss_coordinate", rclcpp::QoS{1}.transient_local(),
+      std::bind(&CartesianConvNode::onNavSatFix, this, _1));
 }
 
+void CartesianConvNode::onNavSatFix(
+    const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg) {
+
+  if (!utm_pose_map_) {
+    return;
+  }
+
+  double latitude = msg->latitude;
+  double longitude = msg->longitude;
+  double altitude = msg->altitude;
+
+  geometry_msgs::msg::PoseStamped utm_pose;
+  geometry_msgs::msg::PoseStamped utm_pose_local;
+  utm_pose_local.header.frame_id = "map";
+  utm_pose_local.header.stamp = rclcpp::Clock().now();
+
+  int zone;
+  bool northp;
+  UTMUPS::Forward(latitude, longitude, zone, northp, utm_pose.pose.position.x,
+                  utm_pose.pose.position.y);
+
+  utm_pose_local.pose.position.x =
+      utm_pose.pose.position.x - utm_pose_map_->pose.position.x;
+  utm_pose_local.pose.position.y =
+      utm_pose.pose.position.y - utm_pose_map_->pose.position.y;
+  utm_pose_local.pose.position.z = altitude - utm_pose_map_->pose.position.z;
+
+  pub_pose_->publish(utm_pose_local);
+}
 
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<CartesianConv>());
+  rclcpp::NodeOptions node_options;
+  auto node = std::make_shared<CartesianConvNode>(node_options);
+  rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
 }
-
