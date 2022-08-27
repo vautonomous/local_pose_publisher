@@ -28,3 +28,4 @@ subscribed lat-lon-alt coordinates are transformed to local coordinate system
 ### External Dependencies
 
 * GeographicLib
+* libboost-dev
