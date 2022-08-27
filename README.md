@@ -13,6 +13,18 @@ subscribed lat-lon-alt coordinates are transformed to local coordinate system
 
 `ros2 launch latlong2closestlanelet latlong2closestlanelet.launch.py`
 
+#### Publish Dummy NavSatFix Msg
+
+```bash
+ros2 topic pub --once /latlong2closestlanelet/input/goal_gnss_coordinate sensor_msgs/msg/NavSatFix "{ \
+header: { \
+frame_id: 'map'}, \
+latitude: 40.811750, \
+longitude: 29.363222, \
+altitude: 48.35, \
+}"
+```
+
 ### Input Topics
 
 | Name                           | Type                        | Description                           |
