@@ -14,7 +14,7 @@
 //
 // Authors: Kenji Miyake, Ryohsuke Mitsudome
 
-#include "latlong2closestlanelet/lanelet2_utils.hpp"
+#include "local_pose_publisher/lanelet2_utils.hpp"
 
 #include <geometry_msgs/msg/detail/pose_stamped__struct.hpp>
 #include <tf2/LinearMath/Quaternion.h>

@@ -19,9 +19,9 @@ def generate_launch_description():
     }
     return LaunchDescription([
         Node(
-            package='latlong2closestlanelet',
-            executable='latlong2closestlanelet_exe',
-            name='latlong2closestlanelet',
+            package='local_pose_publisher',
+            executable='local_pose_publisher_exe',
+            name='local_pose_publisher_node',
             parameters=[
                 gtu_map_params,
                 node_params,
@@ -30,7 +30,7 @@ def generate_launch_description():
             remappings=[
                 ("~/input/goal_gnss_coordinate", "/hmi/goal_gnss_coordinate"),
                 ("~/input/checkpoint_gnss_coordinate", "/hmi/checkpoint_gnss_coordinate"),
-                ("~/input/debug/pose", "/latlong2closestlanelet/debug/pose"),
+                ("~/input/debug/pose", "/local_pose_publisher/debug/pose"),
                 ("~/output/goal_pose_on_lanelet", "/planning/mission_planning/goal"),
                 ("~/output/checkpoint_pose_on_lanelet", "/planning/mission_planning/checkpoint"),
             ],

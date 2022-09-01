@@ -36,7 +36,7 @@ center line point as `geometry_msgs::msg::PoseStamped` with the lane direction/o
 
 ### Usage
 
-`ros2 launch latlong2closestlanelet latlong2closestlanelet.launch.py`
+`ros2 launch local_pose_publisher local_pose_publisher.launch.py`
 
 ### Debugging
 

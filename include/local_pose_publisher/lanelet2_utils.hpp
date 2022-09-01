@@ -14,8 +14,8 @@
 //
 // Authors: Kenji Miyake, Ryohsuke Mitsudome
 
-#ifndef LATLONG2CLOSESTLANELET__LANELET2_UTILS_HPP_
-#define LATLONG2CLOSESTLANELET__LANELET2_UTILS_HPP_
+#ifndef LOCAL_POSE_PUBLISHER__LANELET2_UTILS_HPP_
+#define LOCAL_POSE_PUBLISHER__LANELET2_UTILS_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -68,4 +68,4 @@ convertBasicPoint3dToPose(const lanelet::BasicPoint3d &point,
 
 } // namespace lanelet2_utils
 
-#endif // LATLONG2CLOSESTLANELET__LANELET2_UTILS_HPP_
+#endif // LOCAL_POSE_PUBLISHER__LANELET2_UTILS_HPP_

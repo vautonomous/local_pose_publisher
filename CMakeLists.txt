@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(latlong2closestlanelet)
+project(local_pose_publisher)
 
 # Find dependencies
 find_package(ament_cmake_auto REQUIRED)
@@ -24,7 +24,7 @@ find_library(GeographicLib_LIBRARIES
 add_definitions(${GeographicLib_DEFINITIONS})
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
-  src/latlong2closestlanelet.cpp
+  src/local_pose_publisher.cpp
   src/lanelet2_utils.cpp)
 
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
@@ -48,7 +48,7 @@ target_link_libraries(${PROJECT_NAME}
   ${lanelet2_io_LIBRARIES}
   ${lanelet2_projection_LIBRARIES})
 
-ament_auto_add_executable(${PROJECT_NAME}_exe src/latlong2closestlanelet.cpp)
+ament_auto_add_executable(${PROJECT_NAME}_exe src/local_pose_publisher.cpp)
 add_dependencies(${PROJECT_NAME}_exe ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME}_exe
   ${PROJECT_NAME}

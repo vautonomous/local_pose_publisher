@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Leo Drive Teknoloji A.Ş.
 
-#include "latlong2closestlanelet/latlong2closestlanelet.hpp"
-#include "latlong2closestlanelet/lanelet2_utils.hpp"
+#include "local_pose_publisher/local_pose_publisher.hpp"
+#include "local_pose_publisher/lanelet2_utils.hpp"
 
 #include <GeographicLib/UTMUPS.hpp>
 
@@ -19,7 +19,7 @@
 using GeographicLib::UTMUPS;
 
 CartesianConvNode::CartesianConvNode(const rclcpp::NodeOptions &node_options)
-    : Node("lat_lon_to_lanelet_closest_pose", node_options) {
+    : Node("local_pose_publisher", node_options) {
 
   using std::placeholders::_1;
 
