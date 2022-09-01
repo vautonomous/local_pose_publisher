@@ -101,6 +101,9 @@ void LocalPosePublisher::onCheckpointNavSatFix(
     const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg) {
 
   if (!goal_ready_) {
+    std::cout << "First give a goal point! Checkpoint is discarded."
+              << std::endl;
+
     return;
   }
 
@@ -173,8 +176,8 @@ geometry_msgs::msg::Point LocalPosePublisher::geographicCoordinatesToUTM(
 
 boost::optional<lanelet::LaneletMapPtr>
 LocalPosePublisher::getLaneletMap(const double &latitude,
-                                 const double &longitude,
-                                 const std::string &lanelet2_file_path) {
+                                  const double &longitude,
+                                  const std::string &lanelet2_file_path) {
 
   boost::optional<lanelet::LaneletMapPtr> map;
   lanelet::ErrorMessages errors{};
