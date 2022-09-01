@@ -18,9 +18,9 @@
 #include <boost/optional.hpp>
 #include <memory>
 
-class CartesianConvNode : public rclcpp::Node {
+class LocalPosePublisher : public rclcpp::Node {
 public:
-  explicit CartesianConvNode(const rclcpp::NodeOptions &node_options);
+  explicit LocalPosePublisher(const rclcpp::NodeOptions &node_options);
 
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pub_goal_pose_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pub_cp_pose_;

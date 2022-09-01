@@ -18,7 +18,7 @@
 
 using GeographicLib::UTMUPS;
 
-CartesianConvNode::CartesianConvNode(const rclcpp::NodeOptions &node_options)
+LocalPosePublisher::LocalPosePublisher(const rclcpp::NodeOptions &node_options)
     : Node("local_pose_publisher", node_options) {
 
   using std::placeholders::_1;
@@ -64,11 +64,11 @@ CartesianConvNode::CartesianConvNode(const rclcpp::NodeOptions &node_options)
   sub_goal_nav_sat_fix_ =
       this->create_subscription<sensor_msgs::msg::NavSatFix>(
           "~/input/goal_gnss_coordinate", 10,
-          std::bind(&CartesianConvNode::onGoalNavSatFix, this, _1));
+          std::bind(&LocalPosePublisher::onGoalNavSatFix, this, _1));
 
   sub_cp_nav_sat_fix_ = this->create_subscription<sensor_msgs::msg::NavSatFix>(
       "~/input/checkpoint_gnss_coordinate", 10,
-      std::bind(&CartesianConvNode::onCheckpointNavSatFix, this, _1));
+      std::bind(&LocalPosePublisher::onCheckpointNavSatFix, this, _1));
 
   if (debug_mode_) {
     pub_raw_local_point_ =
@@ -78,11 +78,11 @@ CartesianConvNode::CartesianConvNode(const rclcpp::NodeOptions &node_options)
     sub_debug_pose_ =
         this->create_subscription<geometry_msgs::msg::PoseStamped>(
             "~/input/debug/pose", 10,
-            std::bind(&CartesianConvNode::onDebugPose, this, _1));
+            std::bind(&LocalPosePublisher::onDebugPose, this, _1));
   }
 }
 
-void CartesianConvNode::onGoalNavSatFix(
+void LocalPosePublisher::onGoalNavSatFix(
     const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg) {
 
   auto closest_pose = getClosestPose(msg);
@@ -97,7 +97,7 @@ void CartesianConvNode::onGoalNavSatFix(
   }
 }
 
-void CartesianConvNode::onCheckpointNavSatFix(
+void LocalPosePublisher::onCheckpointNavSatFix(
     const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg) {
 
   if (!goal_ready_) {
@@ -114,7 +114,7 @@ void CartesianConvNode::onCheckpointNavSatFix(
   }
 }
 
-void CartesianConvNode::onDebugPose(
+void LocalPosePublisher::onDebugPose(
     const geometry_msgs::msg::PoseStamped::ConstSharedPtr msg) {
 
   auto const closest_pose = getClosestCenterLinePoseFromLanelet(
@@ -128,7 +128,7 @@ void CartesianConvNode::onDebugPose(
   }
 }
 
-boost::optional<geometry_msgs::msg::Pose> CartesianConvNode::getClosestPose(
+boost::optional<geometry_msgs::msg::Pose> LocalPosePublisher::getClosestPose(
     const sensor_msgs::msg::NavSatFix::ConstSharedPtr &msg) {
 
   double latitude = msg->latitude;
@@ -160,7 +160,7 @@ boost::optional<geometry_msgs::msg::Pose> CartesianConvNode::getClosestPose(
   return closest_pose;
 }
 
-geometry_msgs::msg::Point CartesianConvNode::geographicCoordinatesToUTM(
+geometry_msgs::msg::Point LocalPosePublisher::geographicCoordinatesToUTM(
     const double &latitude, const double &longitude, const double &altitude) {
   geometry_msgs::msg::Point utm_point;
   int zone;
@@ -172,7 +172,7 @@ geometry_msgs::msg::Point CartesianConvNode::geographicCoordinatesToUTM(
 }
 
 boost::optional<lanelet::LaneletMapPtr>
-CartesianConvNode::getLaneletMap(const double &latitude,
+LocalPosePublisher::getLaneletMap(const double &latitude,
                                  const double &longitude,
                                  const std::string &lanelet2_file_path) {
 
@@ -194,7 +194,7 @@ CartesianConvNode::getLaneletMap(const double &latitude,
   return map;
 }
 
-void CartesianConvNode::refineAllCenterLines(
+void LocalPosePublisher::refineAllCenterLines(
     lanelet::LaneletLayer &lanelet_layer, const double &center_line_density) {
   for (auto &llt : lanelet_layer) {
     const auto refined_center_line =
@@ -204,7 +204,7 @@ void CartesianConvNode::refineAllCenterLines(
 }
 
 boost::optional<geometry_msgs::msg::Pose>
-CartesianConvNode::getClosestCenterLinePoseFromLanelet(
+LocalPosePublisher::getClosestCenterLinePoseFromLanelet(
     const lanelet::LaneletLayer &lanelet_layer,
     const geometry_msgs::msg::Point &p, const double &distance_threshold,
     const int &nearest_lanelet_count, const bool &debug_mode) {
@@ -276,7 +276,7 @@ CartesianConvNode::getClosestCenterLinePoseFromLanelet(
   return {};
 }
 
-void CartesianConvNode::publishPoseStamped(
+void LocalPosePublisher::publishPoseStamped(
     const geometry_msgs::msg::Pose &pose,
     const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr
         &pub_ptr) {
@@ -292,7 +292,7 @@ void CartesianConvNode::publishPoseStamped(
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_options;
-  auto node = std::make_shared<CartesianConvNode>(node_options);
+  auto node = std::make_shared<LocalPosePublisher>(node_options);
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
