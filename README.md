@@ -1,43 +1,134 @@
 ### Description
 
-This package converts GNSS-INS data (latitude,longitude,altitude) to a point on cartesian local
-coordinate system and calculates & publishes the closest pose to the point in the center line of
-lanelet2 map.
+This package converts GNSS data (latitude,longitude,altitude) to a point (raw local point) on
+cartesian local coordinate system. Then gets the closest lanelet around the raw local point.
+Calculates the closest center line point index to the raw local point. Generates and publishes the
+center line point as `geometry_msgs::msg::PoseStamped` with the lane direction/orientation.
 
-### How it works
+### Parameters
 
-The first given location information in config file is set as the map origin. Using this origin
-subscribed lat-lon-alt coordinates are transformed to local coordinate system 
+| Name                      | Type      | Description                                                       |
+| --------------------------| ----------| ------------------------------------------------------------------|
+| `origin_latitude`         | double    | latitude of origin point                                          |
+| `origin_longitude`        | double    | longitude of origin point                                         |
+| `origin_altitude`         | double    | altitude of origin point                                          |
+| `lanelet2_map_path`       | string    | path to lanelet2 map                                              |
+| `center_line_resolution`  | double    | resolution of recreated fine center line                          |
+| `distance_threshold`      | double    | raw goal/checkpoint point distance threshold to closest lanelet   |
+| `debug_mode`              | bool      | enables debugging options and printing debug info                 |
+| `nearest_lanelet_count`   | int       | closest lanelet count around raw goal/checkpoint point            |
+
+### Input Topics
+
+| Name                                  | Type                              | Description                                                       |
+| --------------------------------------| ----------------------------------| ------------------------------------------------------------------|
+| `~/input/goal_gnss_coordinate`        | sensor_msgs::msg::NavSatFix       | goal point coordinates as lat-lon-alt                             |
+| `~/input/checkpoint_gnss_coordinate`  | sensor_msgs::msg::NavSatFix       | checkpoint point coordinates as lat-lon-alt                       |
+| `~/input/debug/pose`                  | geometry_msgs::msg::PoseStamped   | (debugging option) stamped pose msg input besides NavSatFix msg   |
+
+### Output Topics
+
+| Name                                  | Type                              | Description                               |
+| --------------------------------------| ----------------------------------| ------------------------------------------|
+| `~/output/goal_pose_on_lanelet`       | geometry_msgs::msg::PoseStamped   | goal pose on the lanelet centerline       |
+| `~/output/checkpoint_pose_on_lanelet` | geometry_msgs::msg::PoseStamped   | checkpoint pose on the lanelet centerline |
+| `~/output/debug/raw_local_point`      | geometry_msgs::msg::PointStamped  | raw point on local coordinate frame       |
 
 ### Usage
 
 `ros2 launch latlong2closestlanelet latlong2closestlanelet.launch.py`
 
-#### Publish Dummy NavSatFix Msg
+### Debugging
+
+* For the sake of easier debugging of the package, goal point inputs can be given
+  as `geometry_msgs::msg::PoseStamped` msg. You can specify `2D Goal Pose` topic name in rviz
+  as `~/input/debug/pose`. That way the package simulates the algorithm as if a goal
+  input (`sensor_msgs::msg::NavSatFix`) is given.
+
+* In addition to that a `geometry_msgs::msg::PointStamped` is published to be able to see the raw
+  point on local coordinate system.
+
+* Observe that extra information is printed on the terminal for debugging.
+
+### Publish Dummy NavSatFix Msg
+
+To be able to publish required goal/checkpoint `sensor_msgs/msg/NavSatFix` msgs without running HMI,
+add following functions (`pub_goal_lat_lon` & `pub_cp_lat_lon`) to your bash_aliases file:
+
+###### Publish Goal Coordinates
 
 ```bash
-ros2 topic pub --once /latlong2closestlanelet/input/goal_gnss_coordinate sensor_msgs/msg/NavSatFix "{ \
+pub_goal_lat_lon(){
+IFS=","
+read -a c_a <<< $1
+lat=${c_a[0]}
+lon=${c_a[1]}
+
+if [ -z "$lon" ]
+then
+	read -a l_a <<< $2
+	if [[ ${#l_a[@]} == 1 ]] && [ -z "${l_a[0]}" ]
+	then
+		lon=$3
+	else
+		lon=${l_a[-1]}
+	fi
+fi
+
+echo "Publishing for $lat,$lon"
+
+ros2 topic pub --once /hmi/goal_gnss_coordinate sensor_msgs/msg/NavSatFix "{ \
 header: { \
 frame_id: 'map'}, \
-latitude: 40.811750, \
-longitude: 29.363222, \
+latitude: $lat, \
+longitude: $lon, \
 altitude: 48.35, \
-}"
+}" >/dev/null
+}
 ```
 
-### Input Topics
+###### Publish Checkpoint Coordinates
 
-| Name                           | Type                        | Description                           |
-| -------------------------------| ----------------------------| --------------------------------------|
-| `~/input/goal_gnss_coordinate` | sensor_msgs::msg::NavSatFix | goal point coordinates as lat-lon-alt |
+```bash
+pub_cp_lat_lon(){
+IFS=","
+read -a c_a <<< $1
+lat=${c_a[0]}
+lon=${c_a[1]}
 
-### Output Topics
+if [ -z "$lon" ]
+then
+	read -a l_a <<< $2
+	if [[ ${#l_a[@]} == 1 ]] && [ -z "${l_a[0]}" ]
+	then
+		lon=$3
+	else
+		lon=${l_a[-1]}
+	fi
+fi
 
-| Name                            | Type                             | Description                     |
-| --------------------------------| ---------------------------------| --------------------------------|
-| `~/output/goal_pose_on_lanelet` | geometry_msgs::msg::PoseStamped  | closest pose in the center line |
+echo "Publishing for $lat,$lon"
+
+ros2 topic pub --once /hmi/checkpoint_gnss_coordinate sensor_msgs/msg/NavSatFix "{ \
+header: { \
+frame_id: 'map'}, \
+latitude: $lat, \
+longitude: $lon, \
+altitude: 48.35, \
+}" >/dev/null
+}
+```
+
+Then run the following commands on your terminal with desired lat lon coordinate arguments:
+
+`pub_goal_lat_lon 40.814364, 29.36180
+`
+
+`pub_cp_lat_lon 40.811057, 29.359412
+`
 
 ### External Dependencies
 
-* GeographicLib
+* geographiclib
 * libboost-dev
+* eigen
