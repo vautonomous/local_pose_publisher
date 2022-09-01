@@ -30,7 +30,7 @@ def generate_launch_description():
             remappings=[
                 ("~/input/goal_gnss_coordinate", "/hmi/goal_gnss_coordinate"),
                 ("~/input/checkpoint_gnss_coordinate", "/hmi/checkpoint_gnss_coordinate"),
-                ("~/input/debug/pose", "/local_pose_publisher/debug/pose"),
+                ("~/input/debug/pose", "/local_pose_publisher_node/debug/pose"),
                 ("~/output/goal_pose_on_lanelet", "/planning/mission_planning/goal"),
                 ("~/output/checkpoint_pose_on_lanelet", "/planning/mission_planning/checkpoint"),
             ],
