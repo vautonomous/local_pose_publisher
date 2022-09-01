@@ -9,7 +9,7 @@ def generate_launch_description():
         "origin_altitude": 48.35
     }
     node_params = {
-        "lanelet2_map_path": "/home/md/projects/operational-design-domains/public_road_bus/maps/gebze/GebzeHQ_HDmap_v08.osm",
+        "lanelet2_map_path": "<map_path>",
         "center_line_resolution": 1.0,  # [m]
         "distance_threshold": 30.0,  # [m]
         "debug_mode": False,

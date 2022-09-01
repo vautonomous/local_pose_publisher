@@ -36,6 +36,8 @@ center line point as `geometry_msgs::msg::PoseStamped` with the lane direction/o
 
 ### Usage
 
+Update parameters in `local_pose_publisher.launch.py`. Then launch:
+
 `ros2 launch local_pose_publisher local_pose_publisher.launch.py`
 
 ### Debugging
