@@ -9,11 +9,24 @@ center line point as `geometry_msgs::msg::PoseStamped` with the lane direction/o
 
 ```bash
 cd <your_workspace>/src
-git clone https://github.com/leo-drive/local_pose_publisher
+git clone git@github.com:leo-drive/local_pose_publisher.git
 source /opt/ros/galactic/setup.bash
+cd ..
 rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 ```
+
+### Usage
+
+* **! Update parameters in `<your_workspace>/src/local_pose_publisher/launch/local_pose_publisher.launch.py`**
+
+```bash
+cd <your_workspace>
+source install/setup.bash
+ros2 launch local_pose_publisher local_pose_publisher.launch.py
+```
+
+* Launch autoware.universe
 
 ### Parameters
 
@@ -43,12 +56,6 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -D
 | `~/output/goal_pose_on_lanelet`       | geometry_msgs::msg::PoseStamped   | goal pose on the lanelet centerline       |
 | `~/output/checkpoint_pose_on_lanelet` | geometry_msgs::msg::PoseStamped   | checkpoint pose on the lanelet centerline |
 | `~/output/debug/raw_local_point`      | geometry_msgs::msg::PointStamped  | raw point on local coordinate frame       |
-
-### Usage
-
-Update parameters in `local_pose_publisher.launch.py`. Then launch:
-
-`ros2 launch local_pose_publisher local_pose_publisher.launch.py`
 
 ### Debugging
 
