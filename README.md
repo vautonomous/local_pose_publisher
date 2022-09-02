@@ -5,6 +5,16 @@ cartesian local coordinate system. Then gets the closest lanelet around the raw 
 Calculates the closest center line point index to the raw local point. Generates and publishes the
 center line point as `geometry_msgs::msg::PoseStamped` with the lane direction/orientation.
 
+### Installation
+
+```bash
+cd <your_workspace>/src
+git clone https://github.com/leo-drive/local_pose_publisher
+source /opt/ros/galactic/setup.bash
+rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+```
+
 ### Parameters
 
 | Name                      | Type      | Description                                                       |
