@@ -18,7 +18,8 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -D
 
 ### Usage
 
-* **! Update parameters in `<your_workspace>/src/local_pose_publisher/launch/local_pose_publisher.launch.py`**
+* **! Update parameters
+  in `<your_workspace>/src/local_pose_publisher/launch/local_pose_publisher.launch.py`**
 
 ```bash
 cd <your_workspace>

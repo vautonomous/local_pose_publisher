@@ -19,6 +19,12 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <geometry_msgs/msg/point.hpp>
+#include <geometry_msgs/msg/pose.hpp>
+#include <geometry_msgs/msg/quaternion.hpp>
+
+#include <boost/optional.hpp>
+
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_core/geometry/LineString.h>
 #include <lanelet2_core/primitives/Lanelet.h>
@@ -27,45 +33,32 @@
 #include <lanelet2_io/Projection.h>
 #include <lanelet2_projection/UTM.h>
 
-#include <geometry_msgs/msg/point.hpp>
-#include <geometry_msgs/msg/pose.hpp>
-#include <geometry_msgs/msg/quaternion.hpp>
-
-#include <boost/optional.hpp>
 #include <memory>
 
-namespace lanelet2_utils {
+namespace lanelet2_utils
+{
+lanelet::LineString3d generateFineCenterLine(
+  const lanelet::ConstLanelet & lanelet_obj, const double & resolution);
 
-lanelet::LineString3d
-generateFineCenterLine(const lanelet::ConstLanelet &lanelet_obj,
-                       const double &resolution);
+std::vector<lanelet::BasicPoint3d> resamplePoints(
+  const lanelet::ConstLineString3d & line_string, const int & num_segments);
 
-std::vector<lanelet::BasicPoint3d>
-resamplePoints(const lanelet::ConstLineString3d &line_string,
-               const int &num_segments);
+std::vector<double> calculateAccumulatedLengths(const lanelet::ConstLineString3d & line_string);
 
-std::vector<double>
-calculateAccumulatedLengths(const lanelet::ConstLineString3d &line_string);
+std::vector<double> calculateSegmentDistances(const lanelet::ConstLineString3d & line_string);
 
-std::vector<double>
-calculateSegmentDistances(const lanelet::ConstLineString3d &line_string);
+std::pair<size_t, size_t> findNearestIndexPair(
+  const std::vector<double> & accumulated_lengths, const double & target_length);
 
-std::pair<size_t, size_t>
-findNearestIndexPair(const std::vector<double> &accumulated_lengths,
-                     const double &target_length);
+boost::optional<size_t> findNearestIndex(
+  const lanelet::ConstLineString3d & line, const geometry_msgs::msg::Point & point);
 
-boost::optional<size_t>
-findNearestIndex(const lanelet::ConstLineString3d &line,
-                 const geometry_msgs::msg::Point &point);
+geometry_msgs::msg::Quaternion getOrientation(
+  const lanelet::BasicPoint3d & point, const lanelet::BasicPoint3d & next_point);
 
-geometry_msgs::msg::Quaternion
-getOrientation(const lanelet::BasicPoint3d &point,
-               const lanelet::BasicPoint3d &next_point);
+geometry_msgs::msg::Pose convertBasicPoint3dToPose(
+  const lanelet::BasicPoint3d & point, const geometry_msgs::msg::Quaternion & quaternion);
 
-geometry_msgs::msg::Pose
-convertBasicPoint3dToPose(const lanelet::BasicPoint3d &point,
-                          const geometry_msgs::msg::Quaternion &quaternion);
+}  // namespace lanelet2_utils
 
-} // namespace lanelet2_utils
-
-#endif // LOCAL_POSE_PUBLISHER__LANELET2_UTILS_HPP_
+#endif  // LOCAL_POSE_PUBLISHER__LANELET2_UTILS_HPP_

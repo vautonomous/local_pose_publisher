@@ -1,13 +1,11 @@
 // Copyright (c) 2022 Leo Drive Teknoloji A.Ş.
 
 #include "local_pose_publisher/local_pose_publisher.hpp"
+
 #include "local_pose_publisher/lanelet2_utils.hpp"
 
 #include <GeographicLib/UTMUPS.hpp>
-
 #include <rclcpp/rclcpp.hpp>
-
-#include <memory>
 
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_core/primitives/Lanelet.h>
@@ -16,11 +14,13 @@
 #include <lanelet2_io/Projection.h>
 #include <lanelet2_projection/UTM.h>
 
+#include <memory>
+
 using GeographicLib::UTMUPS;
 
-LocalPosePublisher::LocalPosePublisher(const rclcpp::NodeOptions &node_options)
-    : Node("local_pose_publisher", node_options) {
-
+LocalPosePublisher::LocalPosePublisher(const rclcpp::NodeOptions & node_options)
+: Node("local_pose_publisher", node_options)
+{
   using std::placeholders::_1;
 
   // Parameters
@@ -29,23 +29,19 @@ LocalPosePublisher::LocalPosePublisher(const rclcpp::NodeOptions &node_options)
   const double origin_altitude = declare_parameter("origin_altitude", 0.0);
 
   const auto lanelet2_file_path = declare_parameter("lanelet2_map_path", "");
-  const double center_line_resolution =
-      declare_parameter("center_line_resolution", 1.0);
+  const double center_line_resolution = declare_parameter("center_line_resolution", 1.0);
   distance_threshold_ = declare_parameter("distance_threshold", 30.0);
-  nearest_lanelet_count_ =
-      static_cast<int>(declare_parameter("nearest_lanelet_count", 10));
+  nearest_lanelet_count_ = static_cast<int>(declare_parameter("nearest_lanelet_count", 10));
   debug_mode_ = declare_parameter("debug_mode", false);
 
   goal_ready_ = false;
   cp_counter_ = 0;
 
   // Initialize UTM map origin
-  utm_map_origin_ = geographicCoordinatesToUTM(
-      origin_latitude, origin_longitude, origin_altitude);
+  utm_map_origin_ = geographicCoordinatesToUTM(origin_latitude, origin_longitude, origin_altitude);
 
   // Load lanelet2 map
-  auto map =
-      getLaneletMap(origin_latitude, origin_longitude, lanelet2_file_path);
+  auto map = getLaneletMap(origin_latitude, origin_longitude, lanelet2_file_path);
   if (map) {
     refineAllCenterLines(map.get()->laneletLayer, center_line_resolution);
     map_ = map.get();
@@ -54,37 +50,31 @@ LocalPosePublisher::LocalPosePublisher(const rclcpp::NodeOptions &node_options)
   }
 
   // Publishers
-  pub_goal_pose_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
-      "~/output/goal_pose_on_lanelet", 1);
+  pub_goal_pose_ =
+    this->create_publisher<geometry_msgs::msg::PoseStamped>("~/output/goal_pose_on_lanelet", 1);
 
   pub_cp_pose_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
-      "~/output/checkpoint_pose_on_lanelet", 1);
+    "~/output/checkpoint_pose_on_lanelet", 1);
 
   // Subscriptions
-  sub_goal_nav_sat_fix_ =
-      this->create_subscription<sensor_msgs::msg::NavSatFix>(
-          "~/input/goal_gnss_coordinate", 10,
-          std::bind(&LocalPosePublisher::onGoalNavSatFix, this, _1));
+  sub_goal_nav_sat_fix_ = this->create_subscription<sensor_msgs::msg::NavSatFix>(
+    "~/input/goal_gnss_coordinate", 10, std::bind(&LocalPosePublisher::onGoalNavSatFix, this, _1));
 
   sub_cp_nav_sat_fix_ = this->create_subscription<sensor_msgs::msg::NavSatFix>(
-      "~/input/checkpoint_gnss_coordinate", 10,
-      std::bind(&LocalPosePublisher::onCheckpointNavSatFix, this, _1));
+    "~/input/checkpoint_gnss_coordinate", 10,
+    std::bind(&LocalPosePublisher::onCheckpointNavSatFix, this, _1));
 
   if (debug_mode_) {
     pub_raw_local_point_ =
-        this->create_publisher<geometry_msgs::msg::PointStamped>(
-            "~/output/debug/raw_local_point", 1);
+      this->create_publisher<geometry_msgs::msg::PointStamped>("~/output/debug/raw_local_point", 1);
 
-    sub_debug_pose_ =
-        this->create_subscription<geometry_msgs::msg::PoseStamped>(
-            "~/input/debug/pose", 10,
-            std::bind(&LocalPosePublisher::onDebugPose, this, _1));
+    sub_debug_pose_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
+      "~/input/debug/pose", 10, std::bind(&LocalPosePublisher::onDebugPose, this, _1));
   }
 }
 
-void LocalPosePublisher::onGoalNavSatFix(
-    const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg) {
-
+void LocalPosePublisher::onGoalNavSatFix(const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg)
+{
   auto closest_pose = getClosestPose(msg);
   if (closest_pose) {
     // Publish the closest goal pose
@@ -98,11 +88,10 @@ void LocalPosePublisher::onGoalNavSatFix(
 }
 
 void LocalPosePublisher::onCheckpointNavSatFix(
-    const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg) {
-
+  const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg)
+{
   if (!goal_ready_) {
-    std::cout << "First give a goal point! Checkpoint is discarded."
-              << std::endl;
+    std::cout << "First give a goal point! Checkpoint is discarded." << std::endl;
 
     return;
   }
@@ -112,17 +101,15 @@ void LocalPosePublisher::onCheckpointNavSatFix(
     // Publish the closest checkpoint pose
     publishPoseStamped(closest_pose.get(), pub_cp_pose_);
 
-    std::cout << "Checkpoint pose is published (" << ++cp_counter_ << ")"
-              << std::endl;
+    std::cout << "Checkpoint pose is published (" << ++cp_counter_ << ")" << std::endl;
   }
 }
 
-void LocalPosePublisher::onDebugPose(
-    const geometry_msgs::msg::PoseStamped::ConstSharedPtr msg) {
-
+void LocalPosePublisher::onDebugPose(const geometry_msgs::msg::PoseStamped::ConstSharedPtr msg)
+{
   auto const closest_pose = getClosestCenterLinePoseFromLanelet(
-      map_->laneletLayer, msg->pose.position, distance_threshold_,
-      nearest_lanelet_count_, debug_mode_);
+    map_->laneletLayer, msg->pose.position, distance_threshold_, nearest_lanelet_count_,
+    debug_mode_);
 
   if (closest_pose) {
     // Publish the closest pose
@@ -132,8 +119,8 @@ void LocalPosePublisher::onDebugPose(
 }
 
 boost::optional<geometry_msgs::msg::Pose> LocalPosePublisher::getClosestPose(
-    const sensor_msgs::msg::NavSatFix::ConstSharedPtr &msg) {
-
+  const sensor_msgs::msg::NavSatFix::ConstSharedPtr & msg)
+{
   double latitude = msg->latitude;
   double longitude = msg->longitude;
   double altitude = msg->altitude;
@@ -157,14 +144,14 @@ boost::optional<geometry_msgs::msg::Pose> LocalPosePublisher::getClosestPose(
 
   // Find closest center line pose from lanelet2 map
   auto closest_pose = getClosestCenterLinePoseFromLanelet(
-      map_->laneletLayer, utm_local_point, distance_threshold_,
-      nearest_lanelet_count_, debug_mode_);
+    map_->laneletLayer, utm_local_point, distance_threshold_, nearest_lanelet_count_, debug_mode_);
 
   return closest_pose;
 }
 
 geometry_msgs::msg::Point LocalPosePublisher::geographicCoordinatesToUTM(
-    const double &latitude, const double &longitude, const double &altitude) {
+  const double & latitude, const double & longitude, const double & altitude)
+{
   geometry_msgs::msg::Point utm_point;
   int zone;
   bool northp;
@@ -174,11 +161,9 @@ geometry_msgs::msg::Point LocalPosePublisher::geographicCoordinatesToUTM(
   return utm_point;
 }
 
-boost::optional<lanelet::LaneletMapPtr>
-LocalPosePublisher::getLaneletMap(const double &latitude,
-                                  const double &longitude,
-                                  const std::string &lanelet2_file_path) {
-
+boost::optional<lanelet::LaneletMapPtr> LocalPosePublisher::getLaneletMap(
+  const double & latitude, const double & longitude, const std::string & lanelet2_file_path)
+{
   boost::optional<lanelet::LaneletMapPtr> map;
   lanelet::ErrorMessages errors{};
   lanelet::GPSPoint position{latitude, longitude};
@@ -186,7 +171,7 @@ LocalPosePublisher::getLaneletMap(const double &latitude,
   lanelet::projection::UtmProjector projector{origin};
   map = lanelet::load(lanelet2_file_path, projector, &errors);
 
-  for (const auto &error : errors) {
+  for (const auto & error : errors) {
     RCLCPP_ERROR_STREAM(this->get_logger(), error);
   }
 
@@ -198,34 +183,32 @@ LocalPosePublisher::getLaneletMap(const double &latitude,
 }
 
 void LocalPosePublisher::refineAllCenterLines(
-    lanelet::LaneletLayer &lanelet_layer, const double &center_line_density) {
-  for (auto &llt : lanelet_layer) {
+  lanelet::LaneletLayer & lanelet_layer, const double & center_line_density)
+{
+  for (auto & llt : lanelet_layer) {
     const auto refined_center_line =
-        lanelet2_utils::generateFineCenterLine(llt, center_line_density);
+      lanelet2_utils::generateFineCenterLine(llt, center_line_density);
     llt.setCenterline(refined_center_line);
   }
 }
 
-boost::optional<geometry_msgs::msg::Pose>
-LocalPosePublisher::getClosestCenterLinePoseFromLanelet(
-    const lanelet::LaneletLayer &lanelet_layer,
-    const geometry_msgs::msg::Point &p, const double &distance_threshold,
-    const int &nearest_lanelet_count, const bool &debug_mode) {
-
+boost::optional<geometry_msgs::msg::Pose> LocalPosePublisher::getClosestCenterLinePoseFromLanelet(
+  const lanelet::LaneletLayer & lanelet_layer, const geometry_msgs::msg::Point & p,
+  const double & distance_threshold, const int & nearest_lanelet_count, const bool & debug_mode)
+{
   lanelet::BasicPoint2d lanelet_point(p.x, p.y);
-  auto const close_lanelets = lanelet::geometry::findNearest(
-      lanelet_layer, lanelet_point, nearest_lanelet_count);
+  auto const close_lanelets =
+    lanelet::geometry::findNearest(lanelet_layer, lanelet_point, nearest_lanelet_count);
 
   if (debug_mode) {
     std::cout << "---------------------------------------" << std::endl;
     std::cout << "Closest lanelets:" << std::endl;
   }
-  for (auto const &llt_pair : close_lanelets) {
+  for (auto const & llt_pair : close_lanelets) {
     auto const distance_to_lanelet = llt_pair.first;
     auto lanelet = llt_pair.second;
 
-    std::string subtype =
-        lanelet.attributeOr(lanelet::AttributeName::Subtype, "none");
+    std::string subtype = lanelet.attributeOr(lanelet::AttributeName::Subtype, "none");
 
     if (debug_mode) {
       std::cout << "-----------------" << std::endl;
@@ -242,15 +225,14 @@ LocalPosePublisher::getClosestCenterLinePoseFromLanelet(
     if (distance_to_lanelet > distance_threshold) {
       std::cout << "Coordinate is too far from the closest lanelet!";
       if (debug_mode) {
-        std::cout << " [distance_to_lanelet(" << distance_to_lanelet
-                  << ") > distance_threshold(" << distance_threshold << ")]";
+        std::cout << " [distance_to_lanelet(" << distance_to_lanelet << ") > distance_threshold("
+                  << distance_threshold << ")]";
       }
       std::cout << "" << std::endl;
       return {};
     }
 
-    auto nearest_idx =
-        lanelet2_utils::findNearestIndex(lanelet.centerline(), p);
+    auto nearest_idx = lanelet2_utils::findNearestIndex(lanelet.centerline(), p);
 
     if (!nearest_idx) {
       return {};
@@ -263,27 +245,23 @@ LocalPosePublisher::getClosestCenterLinePoseFromLanelet(
     auto const nearest_point = lanelet.centerline()[nearest_idx.get()];
     auto const nearest_point_next = lanelet.centerline()[nearest_idx.get() + 1];
 
-    auto const pose_orientation =
-        lanelet2_utils::getOrientation(nearest_point, nearest_point_next);
+    auto const pose_orientation = lanelet2_utils::getOrientation(nearest_point, nearest_point_next);
 
-    auto closest_pose = lanelet2_utils::convertBasicPoint3dToPose(
-        nearest_point, pose_orientation);
+    auto closest_pose = lanelet2_utils::convertBasicPoint3dToPose(nearest_point, pose_orientation);
     return closest_pose;
   }
   if (debug_mode) {
-    std::cout
-        << "Couldn't find the closest center line from lanelet! (Consider "
-           "increasing #count for lanelet::geometry::findNearest)"
-        << std::endl;
+    std::cout << "Couldn't find the closest center line from lanelet! (Consider "
+                 "increasing #count for lanelet::geometry::findNearest)"
+              << std::endl;
   }
   return {};
 }
 
 void LocalPosePublisher::publishPoseStamped(
-    const geometry_msgs::msg::Pose &pose,
-    const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr
-        &pub_ptr) {
-
+  const geometry_msgs::msg::Pose & pose,
+  const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_ptr)
+{
   geometry_msgs::msg::PoseStamped closest_pose_stamped;
   closest_pose_stamped.header.frame_id = "map";
   closest_pose_stamped.header.stamp = this->now();
@@ -292,7 +270,8 @@ void LocalPosePublisher::publishPoseStamped(
   pub_ptr->publish(closest_pose_stamped);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char * argv[])
+{
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_options;
   auto node = std::make_shared<LocalPosePublisher>(node_options);
