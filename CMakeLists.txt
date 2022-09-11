@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 project(local_pose_publisher)
 
+find_package(autoware_cmake REQUIRED)
+autoware_package()
+
 # Find dependencies
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()

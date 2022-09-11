@@ -17,6 +17,7 @@
 #include "local_pose_publisher/lanelet2_utils.hpp"
 
 #include <geometry_msgs/msg/pose.hpp>
+
 #include <tf2/LinearMath/Quaternion.h>
 
 namespace lanelet2_utils

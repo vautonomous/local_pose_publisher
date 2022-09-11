@@ -58,9 +58,6 @@ private:
   static geometry_msgs::msg::Point geographicCoordinatesToUTM(
     const double & latitude, const double & longitude, const double & altitude);
 
-  boost::optional<lanelet::LaneletMapPtr> getLaneletMap(
-    const double & latitude, const double & longitude, const std::string & lanelet2_file_path);
-
   static void refineAllCenterLines(
     lanelet::LaneletLayer & lanelet_layer, const double & center_line_density);
 
@@ -72,9 +69,10 @@ private:
     const geometry_msgs::msg::Pose & pose,
     const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_ptr);
 
-  std::shared_ptr <lanelet::LaneletMap> map_;
+  std::shared_ptr<lanelet::LaneletMap> map_;
   geometry_msgs::msg::Point utm_map_origin_;
 
+  double center_line_resolution_;
   double distance_threshold_;
   int nearest_lanelet_count_;
   bool debug_mode_;

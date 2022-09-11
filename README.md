@@ -5,29 +5,18 @@ cartesian local coordinate system. Then gets the closest lanelet around the raw 
 Calculates the closest center line point index to the raw local point. Generates and publishes the
 center line point as `geometry_msgs::msg::PoseStamped` with the lane direction/orientation.
 
-### Installation
-
-```bash
-cd <your_workspace>/src
-git clone git@github.com:leo-drive/local_pose_publisher.git
-source /opt/ros/galactic/setup.bash
-cd ..
-rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
-colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=1
-```
-
 ### Usage
 
-* **! Update parameters
-  in `<your_workspace>/src/local_pose_publisher/launch/local_pose_publisher.launch.py`**
+* **! Update parameters in `local_pose_publisher.launch.py`**
+
+
+* Launch autoware.universe
 
 ```bash
 cd <your_workspace>
 source install/setup.bash
 ros2 launch local_pose_publisher local_pose_publisher.launch.py
 ```
-
-* Launch autoware.universe
 
 ### Parameters
 
@@ -43,11 +32,12 @@ ros2 launch local_pose_publisher local_pose_publisher.launch.py
 
 ### Input Topics
 
-| Name                                  | Type                              | Description                                                       |
-| --------------------------------------| ----------------------------------| ------------------------------------------------------------------|
-| `~/input/goal_gnss_coordinate`        | sensor_msgs::msg::NavSatFix       | goal point coordinates as lat-lon-alt                             |
-| `~/input/checkpoint_gnss_coordinate`  | sensor_msgs::msg::NavSatFix       | checkpoint point coordinates as lat-lon-alt                       |
-| `~/input/debug/pose`                  | geometry_msgs::msg::PoseStamped   | (debugging option) stamped pose msg input besides NavSatFix msg   |
+| Name                                  | Type                                          | Description                                                       |
+| --------------------------------------| ----------------------------------------------| ------------------------------------------------------------------|
+| `~/input/vector_map`                  | autoware_auto_mapping_msgs::msg::HADMapBin    | vector map                                                        |
+| `~/input/goal_gnss_coordinate`        | sensor_msgs::msg::NavSatFix                   | goal point coordinates as lat-lon-alt                             |
+| `~/input/checkpoint_gnss_coordinate`  | sensor_msgs::msg::NavSatFix                   | checkpoint point coordinates as lat-lon-alt                       |
+| `~/input/debug/pose`                  | geometry_msgs::msg::PoseStamped               | (debugging option) stamped pose msg input besides NavSatFix msg   |
 
 ### Output Topics
 

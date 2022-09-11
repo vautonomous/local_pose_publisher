@@ -28,6 +28,7 @@ def generate_launch_description():
                 advanced_node_params,
             ],
             remappings=[
+                ("~/input/vector_map", "/map/vector_map"),
                 ("~/input/goal_gnss_coordinate", "/hmi/goal_gnss_coordinate"),
                 ("~/input/checkpoint_gnss_coordinate", "/hmi/checkpoint_gnss_coordinate"),
                 ("~/input/debug/pose", "/local_pose_publisher_node/debug/pose"),

@@ -17,8 +17,8 @@
 #ifndef LOCAL_POSE_PUBLISHER__LANELET2_UTILS_HPP_
 #define LOCAL_POSE_PUBLISHER__LANELET2_UTILS_HPP_
 
-#include "lanelet2_extension/utility/utilities.hpp"
 #include "lanelet2_extension/utility/message_conversion.hpp"
+#include "lanelet2_extension/utility/utilities.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 

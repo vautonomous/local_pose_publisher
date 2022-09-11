@@ -19,13 +19,6 @@
 #include <GeographicLib/UTMUPS.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <lanelet2_core/LaneletMap.h>
-#include <lanelet2_core/primitives/Lanelet.h>
-#include <lanelet2_core/primitives/LineString.h>
-#include <lanelet2_io/Io.h>
-#include <lanelet2_io/Projection.h>
-#include <lanelet2_projection/UTM.h>
-
 #include <memory>
 
 using GeographicLib::UTMUPS;
@@ -40,23 +33,13 @@ LocalPosePublisher::LocalPosePublisher(const rclcpp::NodeOptions & node_options)
   const double origin_longitude = declare_parameter("origin_longitude", 0.0);
   const double origin_altitude = declare_parameter("origin_altitude", 0.0);
 
-  const auto lanelet2_file_path = declare_parameter("lanelet2_map_path", "");
-  const double center_line_resolution = declare_parameter("center_line_resolution", 1.0);
+  center_line_resolution_ = declare_parameter("center_line_resolution", 1.0);
   distance_threshold_ = declare_parameter("distance_threshold", 30.0);
   nearest_lanelet_count_ = static_cast<int>(declare_parameter("nearest_lanelet_count", 10));
   debug_mode_ = declare_parameter("debug_mode", false);
 
   // Initialize UTM map origin
   utm_map_origin_ = geographicCoordinatesToUTM(origin_latitude, origin_longitude, origin_altitude);
-
-  // Load lanelet2 map
-  //  auto map = getLaneletMap(origin_latitude, origin_longitude, lanelet2_file_path);
-  //  if (map) {
-  //    refineAllCenterLines(map.get()->laneletLayer, center_line_resolution);
-  //    map_ = map.get();
-  //
-  //    std::cout << "Lanelet2 map is loaded successfully." << std::endl;
-  //  }
 
   // Publishers
   pub_goal_pose_ =
@@ -91,6 +74,7 @@ void LocalPosePublisher::onMapBin(
 {
   map_ = std::make_shared<lanelet::LaneletMap>();
   lanelet::utils::conversion::fromBinMsg(*msg, map_);
+  refineAllCenterLines(map_->laneletLayer, center_line_resolution_);
   map_ready_ = true;
   std::cout << "Lanelet2 map is loaded successfully." << std::endl;
 }
@@ -189,27 +173,6 @@ geometry_msgs::msg::Point LocalPosePublisher::geographicCoordinatesToUTM(
   utm_point.z = altitude;
 
   return utm_point;
-}
-
-boost::optional<lanelet::LaneletMapPtr> LocalPosePublisher::getLaneletMap(
-  const double & latitude, const double & longitude, const std::string & lanelet2_file_path)
-{
-  boost::optional<lanelet::LaneletMapPtr> map;
-  lanelet::ErrorMessages errors{};
-  lanelet::GPSPoint position{latitude, longitude};
-  lanelet::Origin origin{position};
-  lanelet::projection::UtmProjector projector{origin};
-  map = lanelet::load(lanelet2_file_path, projector, &errors);
-
-  for (const auto & error : errors) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), error);
-  }
-
-  if (!errors.empty()) {
-    return {};
-  }
-
-  return map;
 }
 
 void LocalPosePublisher::refineAllCenterLines(
