@@ -1,8 +1,20 @@
 // Copyright (c) 2022 Leo Drive Teknoloji A.Ş.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Authors: Mehmet Dogru, Melike Tanrikulu
 
 #include "local_pose_publisher/local_pose_publisher.hpp"
-
-#include "local_pose_publisher/lanelet2_utils.hpp"
 
 #include <GeographicLib/UTMUPS.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -19,7 +31,7 @@
 using GeographicLib::UTMUPS;
 
 LocalPosePublisher::LocalPosePublisher(const rclcpp::NodeOptions & node_options)
-: Node("local_pose_publisher", node_options)
+: Node("local_pose_publisher", node_options), map_ready_(false), goal_ready_(false), cp_counter_(0)
 {
   using std::placeholders::_1;
 
@@ -34,20 +46,17 @@ LocalPosePublisher::LocalPosePublisher(const rclcpp::NodeOptions & node_options)
   nearest_lanelet_count_ = static_cast<int>(declare_parameter("nearest_lanelet_count", 10));
   debug_mode_ = declare_parameter("debug_mode", false);
 
-  goal_ready_ = false;
-  cp_counter_ = 0;
-
   // Initialize UTM map origin
   utm_map_origin_ = geographicCoordinatesToUTM(origin_latitude, origin_longitude, origin_altitude);
 
   // Load lanelet2 map
-  auto map = getLaneletMap(origin_latitude, origin_longitude, lanelet2_file_path);
-  if (map) {
-    refineAllCenterLines(map.get()->laneletLayer, center_line_resolution);
-    map_ = map.get();
-
-    std::cout << "Lanelet2 map is loaded successfully." << std::endl;
-  }
+  //  auto map = getLaneletMap(origin_latitude, origin_longitude, lanelet2_file_path);
+  //  if (map) {
+  //    refineAllCenterLines(map.get()->laneletLayer, center_line_resolution);
+  //    map_ = map.get();
+  //
+  //    std::cout << "Lanelet2 map is loaded successfully." << std::endl;
+  //  }
 
   // Publishers
   pub_goal_pose_ =
@@ -57,6 +66,10 @@ LocalPosePublisher::LocalPosePublisher(const rclcpp::NodeOptions & node_options)
     "~/output/checkpoint_pose_on_lanelet", 1);
 
   // Subscriptions
+  sub_map_bin_ = create_subscription<autoware_auto_mapping_msgs::msg::HADMapBin>(
+    "~/input/vector_map", rclcpp::QoS{10}.transient_local(),
+    std::bind(&LocalPosePublisher::onMapBin, this, _1));
+
   sub_goal_nav_sat_fix_ = this->create_subscription<sensor_msgs::msg::NavSatFix>(
     "~/input/goal_gnss_coordinate", 10, std::bind(&LocalPosePublisher::onGoalNavSatFix, this, _1));
 
@@ -73,8 +86,21 @@ LocalPosePublisher::LocalPosePublisher(const rclcpp::NodeOptions & node_options)
   }
 }
 
+void LocalPosePublisher::onMapBin(
+  const autoware_auto_mapping_msgs::msg::HADMapBin ::ConstSharedPtr msg)
+{
+  map_ = std::make_shared<lanelet::LaneletMap>();
+  lanelet::utils::conversion::fromBinMsg(*msg, map_);
+  map_ready_ = true;
+  std::cout << "Lanelet2 map is loaded successfully." << std::endl;
+}
+
 void LocalPosePublisher::onGoalNavSatFix(const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg)
 {
+  if (!map_ready_) {
+    return;
+  }
+
   auto closest_pose = getClosestPose(msg);
   if (closest_pose) {
     // Publish the closest goal pose
@@ -107,6 +133,10 @@ void LocalPosePublisher::onCheckpointNavSatFix(
 
 void LocalPosePublisher::onDebugPose(const geometry_msgs::msg::PoseStamped::ConstSharedPtr msg)
 {
+  if (!map_ready_) {
+    return;
+  }
+
   auto const closest_pose = getClosestCenterLinePoseFromLanelet(
     map_->laneletLayer, msg->pose.position, distance_threshold_, nearest_lanelet_count_,
     debug_mode_);
@@ -187,7 +217,7 @@ void LocalPosePublisher::refineAllCenterLines(
 {
   for (auto & llt : lanelet_layer) {
     const auto refined_center_line =
-      lanelet2_utils::generateFineCenterLine(llt, center_line_density);
+      lanelet::utils::generateFineCenterline(llt, center_line_density);
     llt.setCenterline(refined_center_line);
   }
 }

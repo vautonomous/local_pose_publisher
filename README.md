@@ -36,7 +36,6 @@ ros2 launch local_pose_publisher local_pose_publisher.launch.py
 | `origin_latitude`         | double    | latitude of origin point                                          |
 | `origin_longitude`        | double    | longitude of origin point                                         |
 | `origin_altitude`         | double    | altitude of origin point                                          |
-| `lanelet2_map_path`       | string    | path to lanelet2 map                                              |
 | `center_line_resolution`  | double    | resolution of recreated fine center line                          |
 | `distance_threshold`      | double    | raw goal/checkpoint point distance threshold to closest lanelet   |
 | `debug_mode`              | bool      | enables debugging options and printing debug info                 |

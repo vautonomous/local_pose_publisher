@@ -9,9 +9,6 @@ find_package(rclcpp REQUIRED)
 find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(GeographicLib REQUIRED)
-find_package(lanelet2_core REQUIRED)
-find_package(lanelet2_io REQUIRED)
-find_package(lanelet2_projection REQUIRED)
 
 find_package(PkgConfig)
 find_path(GeographicLib_INCLUDE_DIR GeographicLib/Config.h
@@ -30,11 +27,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
   ${GeographicLib_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
-  ${BOOST_INCLUDE_DIRS}
-  ${lanelet2_core_INCLUDE_DIRS}
-  ${lanelet2_io_INCLUDE_DIRS}
-  ${lanelet2_projection_INCLUDE_DIRS}
-  )
+  ${BOOST_INCLUDE_DIRS})
 
 ament_target_dependencies(${PROJECT_NAME}
   Boost
@@ -43,10 +36,7 @@ ament_target_dependencies(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${GeographicLib_LIBRARIES}
   ${EIGEN3_LIBRARIES}
-  ${BOOST_LIBRARIES}
-  ${lanelet2_core_LIBRARIES}
-  ${lanelet2_io_LIBRARIES}
-  ${lanelet2_projection_LIBRARIES})
+  ${BOOST_LIBRARIES})
 
 ament_auto_add_executable(${PROJECT_NAME}_exe src/local_pose_publisher.cpp)
 add_dependencies(${PROJECT_NAME}_exe ${PROJECT_NAME})

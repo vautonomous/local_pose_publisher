@@ -1,4 +1,4 @@
-// Copyright 2015-2022 Autoware Foundation. All rights reserved.
+// Copyright (c) 2022 Leo Drive Teknoloji A.Ş.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Authors: Kenji Miyake, Ryohsuke Mitsudome
+// Author: Mehmet Dogru
 
 #ifndef LOCAL_POSE_PUBLISHER__LANELET2_UTILS_HPP_
 #define LOCAL_POSE_PUBLISHER__LANELET2_UTILS_HPP_
+
+#include "lanelet2_extension/utility/utilities.hpp"
+#include "lanelet2_extension/utility/message_conversion.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -23,33 +26,10 @@
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
 
-#include <boost/optional.hpp>
-
-#include <lanelet2_core/LaneletMap.h>
-#include <lanelet2_core/geometry/LineString.h>
-#include <lanelet2_core/primitives/Lanelet.h>
-#include <lanelet2_core/primitives/LineString.h>
-#include <lanelet2_io/Io.h>
-#include <lanelet2_io/Projection.h>
-#include <lanelet2_projection/UTM.h>
-
 #include <memory>
 
 namespace lanelet2_utils
 {
-lanelet::LineString3d generateFineCenterLine(
-  const lanelet::ConstLanelet & lanelet_obj, const double & resolution);
-
-std::vector<lanelet::BasicPoint3d> resamplePoints(
-  const lanelet::ConstLineString3d & line_string, const int & num_segments);
-
-std::vector<double> calculateAccumulatedLengths(const lanelet::ConstLineString3d & line_string);
-
-std::vector<double> calculateSegmentDistances(const lanelet::ConstLineString3d & line_string);
-
-std::pair<size_t, size_t> findNearestIndexPair(
-  const std::vector<double> & accumulated_lengths, const double & target_length);
-
 boost::optional<size_t> findNearestIndex(
   const lanelet::ConstLineString3d & line, const geometry_msgs::msg::Point & point);
 

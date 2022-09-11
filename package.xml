@@ -11,15 +11,13 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
   <depend>rclcpp</depend>
+  <depend>autoware_auto_mapping_msgs</depend>
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>libboost-dev</depend>
   <depend>geographiclib</depend>
-  <depend>lanelet2_core</depend>
-  <depend>lanelet2_io</depend>
-  <depend>lanelet2_maps</depend>
-  <depend>lanelet2_projection</depend>
+  <depend>lanelet2_extension</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
