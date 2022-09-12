@@ -18,6 +18,7 @@
   <depend>libboost-dev</depend>
   <depend>geographiclib</depend>
   <depend>lanelet2_extension</depend>
+  <depend>map_loader</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

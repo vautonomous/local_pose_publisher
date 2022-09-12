@@ -1,0 +1,12 @@
+/**:
+  ros__parameters:
+    local_pose_publisher:
+      center_line_resolution: 1.0  # [m]
+      distance_threshold: 30.0  # [m]
+      debug_mode: false
+
+      map_origin:
+        altitude: 48.35 # [m] todo(md): read from lanelet2_map_loader as well
+
+      advanced:
+        nearest_lanelet_count: 10

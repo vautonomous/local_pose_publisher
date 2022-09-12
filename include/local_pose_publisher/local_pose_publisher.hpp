@@ -46,6 +46,8 @@ public:
   rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr pub_raw_local_point_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr sub_debug_pose_;
 
+  std::string lanelet2_map_projector_type_;
+
 private:
   void onMapBin(const autoware_auto_mapping_msgs::msg::HADMapBin ::ConstSharedPtr msg);
   void onGoalNavSatFix(const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg);

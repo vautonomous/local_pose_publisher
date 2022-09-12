@@ -1,30 +1,36 @@
-from launch import LaunchDescription
+import os
+import yaml
+
 from launch_ros.actions import Node
+from launch import LaunchDescription
+from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    gtu_map_params = {
-        "origin_latitude": 40.81187906,
-        "origin_longitude": 29.35810110,
-        "origin_altitude": 48.35
-    }
-    node_params = {
-        "center_line_resolution": 1.0,  # [m]
-        "distance_threshold": 30.0,  # [m]
-        "debug_mode": False,
-    }
-    advanced_node_params = {
-        "nearest_lanelet_count": 10,
-    }
+    lanelet2_map_loader_param_path = os.path.join(
+        get_package_share_directory('map_loader'),
+        "config",
+        "lanelet2_map_loader.param.yaml",
+    )
+    with open(lanelet2_map_loader_param_path, "r") as f:
+        lanelet2_map_loader_param = yaml.safe_load(f)["/**"]["ros__parameters"]
+
+    local_pose_publisher_param_path = os.path.join(
+        get_package_share_directory('local_pose_publisher'),
+        "config",
+        "local_pose_publisher.param.yaml",
+    )
+    with open(local_pose_publisher_param_path, "r") as f:
+        local_pose_publisher_param = yaml.safe_load(f)["/**"]["ros__parameters"]
+
     return LaunchDescription([
         Node(
             package='local_pose_publisher',
             executable='local_pose_publisher_exe',
             name='local_pose_publisher_node',
             parameters=[
-                gtu_map_params,
-                node_params,
-                advanced_node_params,
+                local_pose_publisher_param,
+                lanelet2_map_loader_param,
             ],
             remappings=[
                 ("~/input/vector_map", "/map/vector_map"),

@@ -29,17 +29,24 @@ LocalPosePublisher::LocalPosePublisher(const rclcpp::NodeOptions & node_options)
   using std::placeholders::_1;
 
   // Parameters
-  const double origin_latitude = declare_parameter("origin_latitude", 0.0);
-  const double origin_longitude = declare_parameter("origin_longitude", 0.0);
-  const double origin_altitude = declare_parameter("origin_altitude", 0.0);
+  lanelet2_map_projector_type_ = declare_parameter("lanelet2_map_projector_type", "");
 
-  center_line_resolution_ = declare_parameter("center_line_resolution", 1.0);
-  distance_threshold_ = declare_parameter("distance_threshold", 30.0);
-  nearest_lanelet_count_ = static_cast<int>(declare_parameter("nearest_lanelet_count", 10));
-  debug_mode_ = declare_parameter("debug_mode", false);
+  if (lanelet2_map_projector_type_ == "UTM") {
+    auto const origin_latitude = declare_parameter("latitude", 0.0);
+    const double origin_longitude = declare_parameter("longitude", 0.0);
+    const double origin_altitude =
+      declare_parameter("local_pose_publisher.map_origin.altitude", 0.0);
 
-  // Initialize UTM map origin
-  utm_map_origin_ = geographicCoordinatesToUTM(origin_latitude, origin_longitude, origin_altitude);
+    // Initialize UTM map origin
+    utm_map_origin_ =
+      geographicCoordinatesToUTM(origin_latitude, origin_longitude, origin_altitude);
+  }
+
+  center_line_resolution_ = declare_parameter("local_pose_publisher.center_line_resolution", 1.0);
+  distance_threshold_ = declare_parameter("local_pose_publisher.distance_threshold", 30.0);
+  debug_mode_ = declare_parameter("local_pose_publisher.debug_mode", false);
+  nearest_lanelet_count_ =
+    static_cast<int>(declare_parameter("local_pose_publisher.advanced.nearest_lanelet_count", 10));
 
   // Publishers
   pub_goal_pose_ =
@@ -268,6 +275,11 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_options;
   auto node = std::make_shared<LocalPosePublisher>(node_options);
+  if (node->lanelet2_map_projector_type_ != "UTM") {
+    RCLCPP_ERROR(node->get_logger(), "Map origin coordinates should be in UTM coordinate frame!");
+    rclcpp::shutdown();
+    return 0;
+  }
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
