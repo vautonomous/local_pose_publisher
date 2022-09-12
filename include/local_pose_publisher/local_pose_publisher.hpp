@@ -81,7 +81,7 @@ private:
 
   bool map_ready_;
   bool goal_ready_;
-  int cp_counter_;
+  unsigned int cp_counter_;
 };
 
 #endif  // LOCAL_POSE_PUBLISHER__LOCAL_POSE_PUBLISHER_HPP_

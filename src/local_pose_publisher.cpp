@@ -83,7 +83,7 @@ void LocalPosePublisher::onMapBin(
   lanelet::utils::conversion::fromBinMsg(*msg, map_);
   refineAllCenterLines(map_->laneletLayer, center_line_resolution_);
   map_ready_ = true;
-  std::cout << "Lanelet2 map is loaded successfully." << std::endl;
+  RCLCPP_INFO(this->get_logger(), "Lanelet2 map is loaded successfully.");
 }
 
 void LocalPosePublisher::onGoalNavSatFix(const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg)
@@ -100,7 +100,7 @@ void LocalPosePublisher::onGoalNavSatFix(const sensor_msgs::msg::NavSatFix::Cons
     cp_counter_ = 0;
     goal_ready_ = true;
 
-    std::cout << "Goal pose is published." << std::endl;
+    RCLCPP_INFO(this->get_logger(), "Goal pose is published.");
   }
 }
 
@@ -108,8 +108,7 @@ void LocalPosePublisher::onCheckpointNavSatFix(
   const sensor_msgs::msg::NavSatFix::ConstSharedPtr msg)
 {
   if (!goal_ready_) {
-    std::cout << "First give a goal point! Checkpoint is discarded." << std::endl;
-
+    RCLCPP_WARN(this->get_logger(), "First give a goal point! Checkpoint is discarded.");
     return;
   }
 
@@ -117,8 +116,7 @@ void LocalPosePublisher::onCheckpointNavSatFix(
   if (closest_pose) {
     // Publish the closest checkpoint pose
     publishPoseStamped(closest_pose.get(), pub_cp_pose_);
-
-    std::cout << "Checkpoint pose is published (" << ++cp_counter_ << ")" << std::endl;
+    RCLCPP_INFO(this->get_logger(), "Checkpoint pose is published (%d)", cp_counter_);
   }
 }
 
@@ -135,7 +133,7 @@ void LocalPosePublisher::onDebugPose(const geometry_msgs::msg::PoseStamped::Cons
   if (closest_pose) {
     // Publish the closest pose
     publishPoseStamped(closest_pose.get(), pub_goal_pose_);
-    std::cout << "Goal pose is published." << std::endl;
+    RCLCPP_INFO(this->get_logger(), "Goal pose is published.");
   }
 }
 
