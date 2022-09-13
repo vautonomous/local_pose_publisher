@@ -9,6 +9,7 @@
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <build_depend>autoware_cmake</build_depend>
 
   <depend>rclcpp</depend>
   <depend>autoware_auto_mapping_msgs</depend>
