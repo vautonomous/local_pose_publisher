@@ -15,6 +15,7 @@
 // Authors: Mehmet Dogru, Melike Tanrikulu
 
 #include "local_pose_publisher/local_pose_publisher.hpp"
+#include <vehicle_info_util/vehicle_info_util.hpp>
 
 #include <GeographicLib/UTMUPS.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -95,7 +96,7 @@ void LocalPosePublisher::onGoalNavSatFix(const sensor_msgs::msg::NavSatFix::Cons
   auto closest_pose = getClosestPose(msg);
   if (closest_pose) {
     // Publish the closest goal pose
-    publishPoseStamped(closest_pose.get(), pub_goal_pose_);
+    publishPoseStamped(*closest_pose, pub_goal_pose_);
 
     cp_counter_ = 0;
     goal_ready_ = true;
@@ -115,7 +116,7 @@ void LocalPosePublisher::onCheckpointNavSatFix(
   auto closest_pose = getClosestPose(msg);
   if (closest_pose) {
     // Publish the closest checkpoint pose
-    publishPoseStamped(closest_pose.get(), pub_cp_pose_);
+    publishPoseStamped(*closest_pose, pub_cp_pose_);
     RCLCPP_INFO(this->get_logger(), "Checkpoint pose is published (%d)", cp_counter_);
   }
 }
@@ -126,13 +127,15 @@ void LocalPosePublisher::onDebugPose(const geometry_msgs::msg::PoseStamped::Cons
     return;
   }
 
-  auto const closest_pose = getClosestCenterLinePoseFromLanelet(
+  auto closest_pose = getClosestCenterLinePoseFromLanelet(
     map_->laneletLayer, msg->pose.position, distance_threshold_, nearest_lanelet_count_,
     debug_mode_);
 
   if (closest_pose) {
+    shiftPoseToVehicleLateralCenter(*closest_pose);
+
     // Publish the closest pose
-    publishPoseStamped(closest_pose.get(), pub_goal_pose_);
+    publishPoseStamped(*closest_pose, pub_goal_pose_);
     RCLCPP_INFO(this->get_logger(), "Goal pose is published.");
   }
 }
@@ -165,7 +168,12 @@ boost::optional<geometry_msgs::msg::Pose> LocalPosePublisher::getClosestPose(
   auto closest_pose = getClosestCenterLinePoseFromLanelet(
     map_->laneletLayer, utm_local_point, distance_threshold_, nearest_lanelet_count_, debug_mode_);
 
-  return closest_pose;
+  if (closest_pose) {
+    shiftPoseToVehicleLateralCenter(*closest_pose);
+    return closest_pose;
+  }
+
+  return {};
 }
 
 geometry_msgs::msg::Point LocalPosePublisher::geographicCoordinatesToUTM(
@@ -236,12 +244,12 @@ boost::optional<geometry_msgs::msg::Pose> LocalPosePublisher::getClosestCenterLi
       return {};
     }
 
-    if (lanelet.centerline().size() - nearest_idx.get() == 1) {
-      nearest_idx = std::max(static_cast<int>(nearest_idx.get()) - 1, 0);
+    if (lanelet.centerline().size() - *nearest_idx == 1) {
+      nearest_idx = std::max(static_cast<int>(*nearest_idx) - 1, 0);
     }
 
-    auto const nearest_point = lanelet.centerline()[nearest_idx.get()];
-    auto const nearest_point_next = lanelet.centerline()[nearest_idx.get() + 1];
+    auto const nearest_point = lanelet.centerline()[*nearest_idx];
+    auto const nearest_point_next = lanelet.centerline()[*nearest_idx + 1];
 
     auto const pose_orientation = lanelet2_utils::getOrientation(nearest_point, nearest_point_next);
 
@@ -266,6 +274,26 @@ void LocalPosePublisher::publishPoseStamped(
   closest_pose_stamped.pose = pose;
 
   pub_ptr->publish(closest_pose_stamped);
+}
+
+void LocalPosePublisher::shiftPoseToVehicleLateralCenter(geometry_msgs::msg::Pose & pose)
+{
+  const auto pose_copy = pose;
+
+  tf2::Quaternion q;
+  tf2::convert(pose_copy.orientation, q);
+  tf2::Matrix3x3 m(q);
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
+
+  const auto vehicle_info = vehicle_info_util::VehicleInfoUtil(*this).getVehicleInfo();
+  const auto shift_length = (vehicle_info.right_overhang_m - vehicle_info.left_overhang_m) / 2.0;
+
+  const auto delta_x = -1 * shift_length * sin(yaw);
+  const auto delta_y = shift_length * cos(yaw);
+
+  pose.position.x += delta_x;
+  pose.position.y += delta_y;
 }
 
 int main(int argc, char * argv[])

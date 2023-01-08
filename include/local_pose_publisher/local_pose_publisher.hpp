@@ -71,6 +71,9 @@ private:
     const geometry_msgs::msg::Pose & pose,
     const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub_ptr);
 
+  // shifts pose laterally on the pose frame to center vehicle footprint on the lane
+  void shiftPoseToVehicleLateralCenter(geometry_msgs::msg::Pose & pose);
+
   std::shared_ptr<lanelet::LaneletMap> map_;
   geometry_msgs::msg::Point utm_map_origin_;
 
