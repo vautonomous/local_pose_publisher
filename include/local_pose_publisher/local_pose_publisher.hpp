@@ -24,10 +24,9 @@
 #include <autoware_auto_mapping_msgs/msg/had_map_bin.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <boost/optional.hpp>
-
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <memory>
 

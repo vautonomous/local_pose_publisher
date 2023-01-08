@@ -15,10 +15,10 @@
 // Authors: Mehmet Dogru, Melike Tanrikulu
 
 #include "local_pose_publisher/local_pose_publisher.hpp"
-#include <vehicle_info_util/vehicle_info_util.hpp>
 
 #include <GeographicLib/UTMUPS.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <vehicle_info_util/vehicle_info_util.hpp>
 
 #include <memory>
 
