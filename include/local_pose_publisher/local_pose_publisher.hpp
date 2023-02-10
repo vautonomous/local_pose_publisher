@@ -28,6 +28,9 @@
 
 #include <boost/optional.hpp>
 
+#include <GeographicLib/UTMUPS.hpp>
+#include <GeographicLib/MGRS.hpp>
+
 #include <memory>
 
 class LocalPosePublisher : public rclcpp::Node
@@ -58,6 +61,8 @@ private:
 
   static geometry_msgs::msg::Point geographicCoordinatesToUTM(
     const double & latitude, const double & longitude, const double & altitude);
+    static geometry_msgs::msg::Point geographic_coordinatesToMGRS(
+            const double & latitude, const double & longitude, const double & altitude);
 
   static void refineAllCenterLines(
     lanelet::LaneletLayer & lanelet_layer, const double & center_line_density);
